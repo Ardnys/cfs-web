@@ -3,9 +3,14 @@ package com.example
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 
+// TODO find a better way to do this
+const val supabaseUrl = "hot"
+const val supabaseKey = "fire"
+
 val supabase = createSupabaseClient(
-    supabaseUrl = "hot", // TODO env variables for these
-    supabaseKey = "fire"
+    supabaseUrl, supabaseKey
 ) {
     install(Postgrest)
 }
+
+

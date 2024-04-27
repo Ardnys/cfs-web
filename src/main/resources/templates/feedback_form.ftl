@@ -4,12 +4,11 @@
 <@layout.header>
     <div>
         <h3>Give feedback</h3>
-        <form action="/${course.courseCode}" method="post">
+        <form action="${course.courseCode}" method="post">
             <p>Course Code: ${course.courseCode}</p>
             <p>Course Name: ${course.courseName}</p>
             <p>Course Date: ${feedback.courseDate}</p>
             <p>Course Topic: ${feedback.courseTopic}</p>
-            <p>Course Topic: ${feedback.url}</p>
             <p>
                 <input type="hidden" name="feedbackId" value=${feedback.id}>
             </p>

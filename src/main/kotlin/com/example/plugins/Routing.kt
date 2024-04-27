@@ -1,12 +1,10 @@
 package com.example.plugins
 
-import com.example.models.Course
-import com.example.models.Feedback
-import com.example.models.Student
-import com.example.models.StudentFeedback
+import com.example.models.*
 import com.example.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.freemarker.*
 import io.ktor.server.request.*
@@ -33,33 +31,81 @@ fun Application.configureRouting() {
 //                )
 
         }
-        get("/feedback/{course_id}") {
-            val code = call.parameters.getOrFail<String>("course_id")
-            val course = supabase.from("courses").select() {
-                filter {
-                    eq("courseCode", code)
+        route("feedback") {
+            get("{course_id}") {
+                // TODO handle invalid course ids
+                val code = call.parameters.getOrFail<String>("course_id")
+                val course = supabase.from("courses").select() {
+                    filter {
+                        eq("courseCode", code)
+                    }
+                }.decodeSingle<Course>()
+
+                val feedback = supabase
+                    .from("feedbacks")
+                    .select(columns = Columns.list("id, courseDate, courseTopic, courseId")) {
+                        filter {
+                            if (course.id != null) {
+                                eq("courseId", course.id)
+                            }
+                        }
+                    }
+                    .decodeSingle<Feedback>()
+
+
+                // TODO if feedback.url == null then no longer active perhaps ?
+
+                call.respond(FreeMarkerContent("feedback_form.ftl", mapOf("course" to course, "feedback" to feedback)))
+            }
+            post("{course_id}") {
+                val formParameters = call.receiveParameters()
+                val studentFeedbackText = formParameters.getOrFail("studentFeedback")
+                val feedbackId = formParameters.getOrFail<Int>("feedbackId").toInt()
+
+                supabase
+                    .from("studentfeedbacks")
+                    .insert(StudentFeedback(studentFeedbackText, feedbackId))
+
+                call.respond(FreeMarkerContent("thankyou.ftl", model = null))
+            }
+            get("activate") {
+                // creates a new feedback entry in the database
+                // accepts some sort of json
+                // date, topic, course code or name
+                // i guess request should look like this
+                /*
+                {
+                    "date": 2024-04-01T09:58:19,
+                    "topic": "loops (for, while, do/while)",
+                    "course": "CS50"
                 }
-            }.decodeList<Course>()[0]
+                */
+                val request = call.receive<UrlActivationRequest>()
+                val courseId = supabase
+                    .from("courses")
+                    .select() {
+                        filter {
+                            eq("courseCode", request.course)
+                        }
+                    }
+                    .decodeSingle<Course>()
+                    .id
 
-            val feedback = supabase
-                .from("feedbacks")
-                .select(Columns.raw("id, courseDate, courseTopic, url, courses(id)"))
-                .decodeList<Feedback>()[0]
+                // TODO add a timestamp or something for the duration
+                println("nice request: $request")
+                val feedback = Feedback(
+                    courseDate = request.date,
+                    courseTopic = request.topic,
+                    courseId = courseId
+                )
 
-            // TODO if feedback.url == null then no longer active perhaps ?
+                supabase
+                    .from("feedbacks")
+                    .insert(feedback)
 
-            call.respond(FreeMarkerContent("feedback_form.ftl", mapOf("course" to course, "feedback" to feedback)))
-        }
-        post("/{course_id}") {
-            val formParameters = call.receiveParameters()
-            val studentFeedbackText = formParameters.getOrFail("studentFeedback")
-            val feedbackId = formParameters.getOrFail<Int>("feedbackId").toInt()
+                call.respond(HttpStatusCode.Created)
+            }
 
-            supabase
-                .from("studentfeedbacks")
-                .insert(StudentFeedback(studentFeedbackText, feedbackId))
-
-            call.respond(FreeMarkerContent("thankyou.ftl", model = null))
         }
     }
 }

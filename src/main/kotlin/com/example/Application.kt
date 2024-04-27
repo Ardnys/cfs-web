@@ -1,17 +1,13 @@
 package com.example
 
-import com.example.models.Student
-import com.example.plugins.*
+import com.example.plugins.configureRouting
 import freemarker.cache.ClassTemplateLoader
 import freemarker.core.HTMLOutputFormat
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.freemarker.*
+import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 
 fun main() {
@@ -20,6 +16,9 @@ fun main() {
 }
 
 fun Application.module() {
+//    val SUPABASE_URL = environment.config.propertyOrNull("supabase.url")?.getString() ?: "hot"
+//    val SUPABASE_KEY = environment.config.propertyOrNull("supabase.key")?.getString() ?: "fire"
+
     // configure freemarker
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
