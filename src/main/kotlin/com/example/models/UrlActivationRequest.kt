@@ -1,19 +1,13 @@
 package com.example.models
 
-import kotlinx.datetime.LocalDateTime
+import com.example.utils.OffsetDateTimeSerializer
 import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
 
 @Serializable
 data class UrlActivationRequest(
-    val date: LocalDateTime,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val date: OffsetDateTime,
     val topic: String,
     val course: String
 )
-
-/* -- JSON counterpart --
-{
-    "date": 2024-04-01T09:58:19,
-    "topic": "loops (for, while, do/while)",
-    "course": "CS50"
-}
- */

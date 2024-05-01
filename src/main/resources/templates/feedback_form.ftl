@@ -9,6 +9,7 @@
             <p>Course Name: ${course.courseName}</p>
             <p>Course Date: ${feedback.courseDate}</p>
             <p>Course Topic: ${feedback.courseTopic}</p>
+            <p>Feedback Start Date: ${feedback.startDate}</p>
             <p>
                 <input type="hidden" name="feedbackId" value=${feedback.id}>
             </p>

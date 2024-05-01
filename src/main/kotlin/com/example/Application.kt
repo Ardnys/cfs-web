@@ -16,8 +16,7 @@ fun main() {
 }
 
 fun Application.module() {
-//    val SUPABASE_URL = environment.config.propertyOrNull("supabase.url")?.getString() ?: "hot"
-//    val SUPABASE_KEY = environment.config.propertyOrNull("supabase.key")?.getString() ?: "fire"
+    // supabase config is in SupaHotFire.kt
 
     // configure freemarker
     install(FreeMarker) {

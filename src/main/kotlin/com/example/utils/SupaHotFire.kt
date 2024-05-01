@@ -1,11 +1,10 @@
-package com.example
+package com.example.utils
 
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 
-// TODO find a better way to do this
-const val supabaseUrl = "hot"
-const val supabaseKey = "fire"
+private val supabaseUrl: String = System.getenv("SUPABASE_URL") ?: "fire"
+private val supabaseKey: String = System.getenv("SUPABASE_KEY") ?: "hot"
 
 val supabase = createSupabaseClient(
     supabaseUrl, supabaseKey
