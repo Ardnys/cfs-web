@@ -100,7 +100,7 @@ fun Application.configureRouting() {
                     courseTopic = request.topic,
                     courseId = course.id,
                     url = "feedback/${course.courseCode}",
-                    startDate = OffsetDateTime.now(ZoneId.systemDefault())
+                    feedbackStartDate = OffsetDateTime.now(ZoneId.systemDefault())
                 )
 
                 supabase
@@ -109,7 +109,6 @@ fun Application.configureRouting() {
 
                 call.respond(HttpStatusCode.Created)
             }
-
         }
     }
 }

@@ -23,5 +23,5 @@ data class Feedback(
 
     @Serializable(with = OffsetDateTimeSerializer::class)
     @SerialName("feedback_start_date")
-    val startDate: OffsetDateTime? = null, // assigned automagically by db
+    val feedbackStartDate: OffsetDateTime? = null, // assigned automagically by db
 )

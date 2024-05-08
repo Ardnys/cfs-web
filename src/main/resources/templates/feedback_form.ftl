@@ -9,13 +9,13 @@
             <p>Course Name: ${course.courseName}</p>
             <p>Course Date: ${feedback.courseDate}</p>
             <p>Course Topic: ${feedback.courseTopic}</p>
-            <p>Feedback Start Date: ${feedback.startDate}</p>
+            <p>Feedback Start Date: ${feedback.feedbackStartDate}</p>
             <p>
-                <input type="hidden" name="feedbackId" value=${feedback.id}>
+                <input type="hidden" name="feedback_id" value=${feedback.id}>
             </p>
             <p>
-                <label for="studentFeedback">Enter your feedback</label>
-                <textarea name="studentFeedback" id="studentFeedback" placeholder="no more than 500 words"></textarea>
+                <label for="student_feedback">Enter your feedback</label>
+                <textarea name="student_feedback" id="student_feedback" placeholder="no more than 500 words"></textarea>
             <p>
                 <input type="submit">
             </p>
