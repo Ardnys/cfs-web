@@ -14,10 +14,11 @@ import kotlinx.coroutines.*
 import java.time.OffsetDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(DelicateCoroutinesApi::class)
 fun startBackgroundProcess() = runBlocking {
-    val dur: Duration = 2.minutes
+    val dur: Duration = 30.seconds
     println("Starting background process...")
     while (true) {
         val feedback = async {
@@ -36,7 +37,6 @@ fun startBackgroundProcess() = runBlocking {
 
 suspend fun checkFeedbackDecay(): List<Feedback> {
     println("Let's check them feedbacks")
-    // TODO there's bug where it gets ALL the older feedbacks. We need to filter them
     // TODO error handling too
     val feedback = supabase
         .from("feedbacks")
@@ -81,14 +81,14 @@ suspend fun callSamurai(f: Feedback) {
             }
         }
         .decodeList<StudentFeedback>()
-        .joinToString(".\n")
-    println("nice feedback: $studentFeedback")
-    return
-    // TODO early return because summary server isn't fully ready
 
-    val response: HttpResponse = client.request("http://localhost:3000/summarize") {
+    val feedbackText = studentFeedback.joinToString(separator = ". ") { it.feedback.trim() }
+
+    println("nice feedback: $feedbackText")
+
+    val response: HttpResponse = client.request("http://localhost:7878/summarize") {
         method = HttpMethod.Post
-        setBody(studentFeedback)
+        setBody(feedbackText)
     }
     // TODO handle other return status conditions as well
     if (response.status.value == 200) {

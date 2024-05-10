@@ -65,6 +65,7 @@ fun Application.configureRouting() {
                 val formParameters = call.receiveParameters()
                 val studentFeedbackText = formParameters.getOrFail("student_feedback")
                 val feedbackId = formParameters.getOrFail<Int>("feedback_id").toInt()
+                // TODO check if the feedback is 500 chars or words whatever
 
                 supabase
                     .from("student_feedbacks")
