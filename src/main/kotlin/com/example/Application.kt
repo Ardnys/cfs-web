@@ -4,15 +4,10 @@ import com.example.plugins.configureRouting
 import com.example.plugins.configureSerialization
 import com.example.plugins.configureTemplating
 import com.example.utils.startBackgroundProcess
-import freemarker.cache.ClassTemplateLoader
-import freemarker.core.HTMLOutputFormat
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
-import io.ktor.server.freemarker.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import kotlinx.coroutines.runBlocking
+import com.example.utils.supabase
 
 fun main() {
     // if true, then the start call blocks a current thread until it finishes its execution.
@@ -28,6 +23,7 @@ fun main() {
 
 fun Application.module() {
     // !! supabase config is in SupaHotFire.kt !!
+    val mailService = MailService(supabase)
     configureTemplating()
     configureSerialization()
     configureRouting()
