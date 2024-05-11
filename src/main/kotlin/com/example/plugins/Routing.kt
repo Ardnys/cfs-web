@@ -1,6 +1,11 @@
 package com.example.plugins
 
-import com.example.models.*
+import com.example.exceptions.CourseNotFoundException
+import com.example.exceptions.FeedbackNotFoundException
+import com.example.models.Course
+import com.example.models.Feedback
+import com.example.models.StudentFeedback
+import com.example.models.UrlActivationRequest
 import com.example.utils.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -14,58 +19,61 @@ import io.ktor.server.util.*
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
+suspend fun getCourseByCode(code: String): Course {
+    return try {
+        supabase.from("courses").select {
+            filter {
+                eq("course_code", code)
+            }
+        }.decodeSingle<Course>()
+    } catch (e: RuntimeException) {
+        val message = "Course not found: ${e.message ?: e.toString()}"
+        throw CourseNotFoundException(message)
+    }
+}
+
+suspend fun getFeedbackByCourseId(id: Int?): Feedback {
+    return try {
+        supabase
+            .from("feedbacks")
+            .select(columns = Columns.list("id, url, course_date, course_topic, course_id, feedback_start_date")) {
+                filter {
+                    if (id != null) {
+                        and {
+                            eq("course_id", id)
+                            gt("feedback_start_date", OffsetDateTime.now().minusHours(48))
+                        }
+                    }
+                }
+            }
+            .decodeSingle<Feedback>()
+    } catch (e: RuntimeException) {
+        val message = "Feedback form is either expired or doesn't exist: ${e.message ?: e.toString()}"
+        throw FeedbackNotFoundException(message)
+    }
+
+}
+
 fun Application.configureRouting() {
     // TODO a different architecture for the routes perhaps
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-        get("/supa") {
-            val students = supabase.from("students").select().decodeList<Student>()
-//            val course = supabase.from("courses").select().decodeList<Course>()[0].toString()
-            call.respondText(students.joinToString())
-//            supabase
-//                .from("courses")
-//                .insert(listOf(
-//                    Course("Intro to Java", "CS100"),
-//                    Course("Calculus 1", "MATH 151"),
-//                    Course("Physics 1", "PHYS 131")
-//                )
-//                )
-
-        }
         route("feedback") {
             get("{course_id}") {
-                // TODO handle invalid course ids
                 val code = call.parameters.getOrFail<String>("course_id")
-                val course = supabase.from("courses").select {
-                    filter {
-                        eq("course_code", code)
-                    }
-                }.decodeSingle<Course>()
 
-                val feedback = supabase
-                    .from("feedbacks")
-                    .select(columns = Columns.list("id, url, course_date, course_topic, course_id, feedback_start_date")) {
-                        filter {
-                            if (course.id != null) {
-                                and {
-                                    eq("course_id", course.id)
-                                    gt("feedback_start_date", OffsetDateTime.now().minusHours(48))
-                                }
-                            }
-                        }
-                    }
-                    .decodeSingle<Feedback>()
+                val course = getCourseByCode(code)
+                val feedback = getFeedbackByCourseId(course.id)
 
                 call.respond(FreeMarkerContent("feedback_form.ftl", mapOf("course" to course, "feedback" to feedback)))
-
             }
             post("{course_id}") {
                 val formParameters = call.receiveParameters()
                 val studentFeedbackText = formParameters.getOrFail("student_feedback")
                 val feedbackId = formParameters.getOrFail<Int>("feedback_id").toInt()
-                // TODO check if the feedback is 500 chars or words whatever
+
+                val wordCount = studentFeedbackText
+                    .split(" ")
+                    .count()
 
                 supabase
                     .from("student_feedbacks")
