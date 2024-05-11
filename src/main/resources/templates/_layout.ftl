@@ -1,11 +1,12 @@
 <#macro header>
     <!DOCTYPE html>
     <html lang="en">
+    <#include "css/stylecss.ftl">
     <head>
-        <title>Kotlin Journal</title>
+        <title>Course Feedback System</title>
     </head>
     <body style="text-align: center; font-family: sans-serif">
-    <h1>Course Feedback System</h1>
+    <h1 class="cfs-header">Course Feedback System</h1>
     <hr>
     <#nested>
     </body>
