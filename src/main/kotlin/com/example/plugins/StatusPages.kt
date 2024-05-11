@@ -14,6 +14,7 @@ fun Application.configureStatusPages() {
                     // they are the same for now. we should make them different and cool
                     call.respond(FreeMarkerContent("coursenotfound.ftl", mapOf("message" to cause.message)))
                 }
+
                 is FeedbackNotFoundException -> {
                     call.respond(FreeMarkerContent("coursenotfound.ftl", mapOf("message" to cause.message)))
                 }

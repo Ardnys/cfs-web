@@ -7,7 +7,7 @@ import java.time.OffsetDateTime
 
 @Serializable
 data class Feedback(
-    val id: Int? = null, // TODO idk how to deal with these for now
+    val id: Int? = null,
 
     @Serializable(with = OffsetDateTimeSerializer::class)
     @SerialName("course_date")
