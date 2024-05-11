@@ -28,14 +28,16 @@
 
     .stupid-grid {
         display: grid;
-        grid-template-columns: 10% 10%;
-        grid-template-rows: repeat(5, 40px);
-        gap: 10px;
+        padding-left: 40%;
+        padding-right: 40%;
+        padding-bottom: 20px;
+        grid-template-columns: 0.5fr 0.5fr;
+        grid-template-rows: repeat(5, 1fr);
+        row-gap: 20px;
         justify-content: center;
     }
 
-    /* Form label */
-    .form-label {
+    .div-label {
         color: #d2b058;
         text-align: left;
     }
@@ -44,16 +46,36 @@
         content: ':';
     }
 
-    /* Form field */
-    .form-field {
+    .div-field {
         color: #b2b8a1;
         text-align: left;
     }
 
+    .form-label-container {
+    }
+
+    .feedback-form {
+        display: grid;
+        padding-left: 40%;
+        padding-right: 30%;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .form-label {
+        grid-row: 2;
+        grid-column: 1;
+        color: #d2b058;
+        text-align: left;
+    }
+
     textarea {
-        width: 40%;
-        height: 20%;
+        grid-row: 1 / 4;
+        grid-column: 2 / 5;
         padding: 10px;
+        margin-left: 10%;
         border: 1px solid #777;
         border-radius: 5px;
         background-color: #555;
@@ -67,6 +89,8 @@
     }
 
     .submit_button {
+        grid-row: 4;
+        grid-column: 4;
         padding: 10px 20px;
         background-color: #007bff;
         color: #fff;
