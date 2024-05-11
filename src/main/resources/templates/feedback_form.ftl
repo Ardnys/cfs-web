@@ -15,10 +15,25 @@
             </p>
             <p>
                 <label for="student_feedback">Enter your feedback</label>
-                <textarea name="student_feedback" id="student_feedback" placeholder="no more than 500 words"></textarea>
+                <textarea name="student_feedback" id="student_feedback" placeholder="no more than 500 words" oninput="countWords()"></textarea>
             <p>
-                <input type="submit">
+                <span id="wordCount"></span> word count:
+            </p>
+            <p>
+                <input id="submit_button" type="submit">
             </p>
         </form>
     </div>
 </@layout.header>
+
+<script>
+    function countWords() {
+        let textArea = document.getElementById("student_feedback")
+        let wordCountSpan = document.getElementById("wordCount")
+        let words = textArea.value.trim().split(/\s+/).length
+
+        wordCountSpan.textContent = words.toString()
+
+        document.getElementById("submit_button").disabled = words > 500;
+    }
+</script>

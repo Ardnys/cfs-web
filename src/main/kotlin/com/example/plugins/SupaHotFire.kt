@@ -1,4 +1,4 @@
-package com.example.utils
+package com.example.plugins
 
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest

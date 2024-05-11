@@ -1,7 +1,8 @@
-package com.example.utils
+package com.example
 
 import com.example.models.Feedback
 import com.example.models.StudentFeedback
+import com.example.plugins.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.ktor.client.*
@@ -10,16 +11,19 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.*
+import io.ktor.util.logging.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(DelicateCoroutinesApi::class)
+internal val LOGGER = KtorSimpleLogger("Tiger Logger")
+
 fun startBackgroundProcess() = runBlocking {
     val dur: Duration = 30.seconds
-    println("Starting background process...")
+    LOGGER.info("Starting background process...")
     while (true) {
         val feedback = async {
             checkFeedbackDecay()
@@ -29,15 +33,12 @@ fun startBackgroundProcess() = runBlocking {
                 callSamurai(f)
             }
         }
-
         delay(dur)
     }
-
 }
 
-suspend fun checkFeedbackDecay(): List<Feedback> {
-    println("Let's check them feedbacks")
-    // TODO error handling too
+private suspend fun checkFeedbackDecay(): List<Feedback> {
+    LOGGER.info("Checking feedback...")
     val feedback = supabase
         .from("feedbacks")
         .select(columns = Columns.list("id, feedback_start_date, course_topic, course_date")) {
@@ -50,7 +51,12 @@ suspend fun checkFeedbackDecay(): List<Feedback> {
             }
         }
         .decodeList<Feedback>()
-    println("uu nice feedbacks if i say myself")
+    if (feedback.isNotEmpty()) {
+        LOGGER.info("Summarizing expired feedback...")
+    } else {
+        LOGGER.info("No expired feedback found.")
+        return emptyList()
+    }
     // set them url to null, they aren't active anymore
     supabase
         .from("feedbacks")
@@ -63,14 +69,15 @@ suspend fun checkFeedbackDecay(): List<Feedback> {
                 Feedback::feedbackStartDate lt OffsetDateTime.now().minusHours(48)
             }
         }
-    println("oh so you updated them nicee")
+
+    LOGGER.info("Expired feedback urls set to null.")
     return feedback
 }
 
 private val client = HttpClient(CIO)
 
-suspend fun callSamurai(f: Feedback) {
-    println("Samurai is called for ${f.courseTopic}")
+private suspend fun callSamurai(f: Feedback) {
+    LOGGER.info("Samurai is called for ${f.courseTopic}")
 
     val studentFeedback = supabase
         .from("student_feedbacks")
@@ -84,29 +91,37 @@ suspend fun callSamurai(f: Feedback) {
 
     val feedbackText = studentFeedback.joinToString(separator = ". ") { it.feedback.trim() }
 
-    println("nice feedback: $feedbackText")
-
     val response: HttpResponse = client.request("http://localhost:7878/summarize") {
         method = HttpMethod.Post
         setBody(feedbackText)
     }
-    // TODO handle other return status conditions as well
-    if (response.status.value == 200) {
-        // yay
-        val summarizedText = response.body<String>()
+    when (response.status.value) {
+        200 -> {
+            LOGGER.info("200: Feedback for topic ${f.courseTopic} is summarized successfully.")
+            val summarizedText = response.body<String>()
 
-        supabase
-            .from("feedbacks")
-            .update(
-                {
-                    Feedback::summary setTo summarizedText
+            supabase
+                .from("feedbacks")
+                .update(
+                    {
+                        Feedback::summary setTo summarizedText
+                    }
+                ) {
+                    filter {
+                        Feedback::id eq f.id
+                    }
                 }
-            ) {
-                filter {
-                    Feedback::id eq f.id
-                }
-            }
-    } else {
-        println("oopsie: " + response.status.value)
+        }
+
+        400 -> {
+            // TODO what should we do here
+            // BAD REQUEST
+            LOGGER.error("400 BAD REQUEST: Samurai did not like your feedback.")
+        }
+
+        500 -> {
+            // INTERNAL SERVER ERROR
+            LOGGER.error("500 INTERNAL SERVER ERROR: Samurai down! Samurai down!")
+        }
     }
 }
