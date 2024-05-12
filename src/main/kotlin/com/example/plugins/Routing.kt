@@ -6,6 +6,7 @@ import com.example.models.Course
 import com.example.models.Feedback
 import com.example.models.StudentFeedback
 import com.example.models.UrlActivationRequest
+import com.example.utils.OffsetDateTimeFormatter
 import io.github.jan.supabase.postgrest.from
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -27,9 +28,21 @@ fun Application.configureRouting() {
                 val course = getCourseByCode(code)
                 val feedback = getFeedbackByCourseId(course.id)
 
+                val courseDateString = OffsetDateTimeFormatter.parse(feedback.courseDate)
+                val millis = feedback.feedbackStartDate?.toInstant()?.toEpochMilli()
+
                 application.log.info("feedback served: $feedback")
 
-                call.respond(FreeMarkerContent("feedback_form.ftl", mapOf("course" to course, "feedback" to feedback)))
+                call.respond(
+                    FreeMarkerContent(
+                        "feedback_form.ftl", mapOf(
+                            "startMillis" to millis,
+                            "courseDateString" to courseDateString,
+                            "course" to course,
+                            "feedback" to feedback
+                        )
+                    )
+                )
             }
             post("{course_id}") {
                 val formParameters = call.receiveParameters()
