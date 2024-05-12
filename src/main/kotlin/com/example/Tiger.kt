@@ -90,6 +90,8 @@ private suspend fun callSamurai(f: Feedback) {
         .decodeList<StudentFeedback>()
 
     val feedbackText = studentFeedback.joinToString(separator = ". ") { it.feedback.trim() }
+    // TODO handle this nicely
+    return
 
     val response: HttpResponse = client.request("http://localhost:7878/summarize") {
         method = HttpMethod.Post
