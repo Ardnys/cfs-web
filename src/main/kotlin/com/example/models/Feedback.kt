@@ -15,7 +15,7 @@ data class Feedback(
 
     @SerialName("course_topic")
     val courseTopic: String,
-    val summary: String? = null.toString(),
+    val summary: String? = null,
     val url: String? = null,
 
     @SerialName("course_id")

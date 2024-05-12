@@ -51,7 +51,7 @@ class MailService {
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender().sendMail(subject, message, mail.toString())
+            MailSender().sendMail(subject, message, mail)
         }
     }
 
@@ -67,15 +67,15 @@ class MailService {
         val message = """
             Dear student,
                             
-            Dear student you can access the feedback form created for the last class about our course ${response.courseCode} here $url. Your input is valued.
+            A feedback form regarding our last class of ${response.courseCode} is created. You can access it from here $url. Your input is valued.
                             
             Best regards,
             """
         return message
     }
 
-    private suspend fun getEnrolledStudentsMails(): List<Any> {
-        val studentMails = mutableListOf<Any>()
+    private suspend fun getEnrolledStudentsMails(): List<String> {
+        val studentMails = mutableListOf<String>()
         val studentIds =getEnrolledStudentIds()
 
         val response = supabase
@@ -86,17 +86,15 @@ class MailService {
                 }
             }.decodeList<Student>()
 
-        response.forEach { students ->
-            students.mail.let {
-                studentMails.add(it)
-            }
+        for (student in response) {
+            studentMails.add(student.mail)
         }
 
         return studentMails
     }
 
-    private suspend fun getEnrolledStudentIds(): List<Any>{
-        val idList = mutableListOf<Any>()
+    private suspend fun getEnrolledStudentIds(): List<Int>{
+        val idList = mutableListOf<Int>()
         val response = supabase
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
@@ -105,11 +103,9 @@ class MailService {
                 }
             }.decodeList<StudentCourses>()
 
-         response.forEach { studentCourses ->
-            studentCourses.studentId.let {
-                idList.add(it!!)
-            }
-         }
+        for (id in response){
+            idList.add(id.studentId!!)
+        }
 
         return idList
     }
