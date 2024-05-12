@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.exceptions.SamuraiUnavailableException
 import com.example.models.Feedback
 import com.example.models.StudentFeedback
 import com.example.plugins.supabase
@@ -15,6 +16,7 @@ import io.ktor.util.logging.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import java.net.ConnectException
 import java.time.OffsetDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -30,7 +32,7 @@ fun startBackgroundProcess() = runBlocking {
         }.await()
         if (feedback.isNotEmpty()) {
             for (f in feedback) {
-                callSamurai(f)
+                summarize(f)
             }
         }
         delay(dur)
@@ -76,7 +78,8 @@ private suspend fun checkFeedbackDecay(): List<Feedback> {
 
 private val client = HttpClient(CIO)
 
-private suspend fun callSamurai(f: Feedback) {
+
+private suspend fun summarize(f: Feedback) {
     LOGGER.info("Samurai is called for ${f.courseTopic}")
 
     val studentFeedback = supabase
@@ -90,13 +93,9 @@ private suspend fun callSamurai(f: Feedback) {
         .decodeList<StudentFeedback>()
 
     val feedbackText = studentFeedback.joinToString(separator = ". ") { it.feedback.trim() }
-    // TODO handle this nicely
-    return
 
-    val response: HttpResponse = client.request("http://localhost:7878/summarize") {
-        method = HttpMethod.Post
-        setBody(feedbackText)
-    }
+    val response = callSamurai(feedbackText)
+
     when (response.status.value) {
         200 -> {
             LOGGER.info("200: Feedback for topic ${f.courseTopic} is summarized successfully.")
@@ -116,14 +115,30 @@ private suspend fun callSamurai(f: Feedback) {
         }
 
         400 -> {
-            // TODO what should we do here
             // BAD REQUEST
-            LOGGER.error("400 BAD REQUEST: Samurai did not like your feedback.")
+            val message = "400 BAD REQUEST: Samurai did not like your feedback."
+            LOGGER.error(message)
+            throw SamuraiUnavailableException(message)
         }
 
         500 -> {
             // INTERNAL SERVER ERROR
-            LOGGER.error("500 INTERNAL SERVER ERROR: Samurai down! Samurai down!")
+            val message = "500 INTERNAL SERVER ERROR: Samurai down! Samurai down!"
+            LOGGER.error(message)
+            throw SamuraiUnavailableException(message)
         }
+    }
+}
+
+private suspend fun callSamurai(feedbackText: String) : HttpResponse {
+    return try {
+        client.request("http://localhost:7878/summarize") {
+            method = HttpMethod.Post
+            setBody(feedbackText)
+        }
+    } catch (e: ConnectException) {
+        val message = "Samurai is not available at the moment: ${e.message ?: e.toString()}"
+        LOGGER.error(message)
+        throw SamuraiUnavailableException(message)
     }
 }
