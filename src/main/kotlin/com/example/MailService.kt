@@ -23,6 +23,7 @@ class MailService {
     private var summary: String? = null.toString()
     private var url: String? = null
     private val json = Json
+    private var feedback: Feedback? = null
 
     suspend fun mailListener() {
         val channel = supabase.channel("mailer")
@@ -31,14 +32,14 @@ class MailService {
         }
         changeFlow.onEach { action ->
             if (action is PostgresAction.Insert) {
-                val feedback = json.decodeFromString<Feedback>(action.record.toString())
-                courseId = feedback.courseId
-                courseDate = feedback.courseDate
-                url = feedback.url
+                feedback = json.decodeFromString<Feedback>(action.record.toString())
+                courseId = feedback!!.courseId
+                courseDate = feedback!!.courseDate
+                url = feedback!!.url
                 sendURLToStudents()
             } else if (action is PostgresAction.Update) {
-                val feedback = json.decodeFromString<Feedback>(action.record.toString())
-                summary = feedback.summary
+                feedback = json.decodeFromString<Feedback>(action.record.toString())
+                summary = feedback!!.summary
                 sendSummaryToTeacher()
             }
         }.launchIn(CoroutineScope(Dispatchers.IO))
@@ -51,7 +52,7 @@ class MailService {
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender().sendMail(subject, message, mail)
+            MailSender.sendMail(subject, message, mail)
         }
     }
 
@@ -119,6 +120,6 @@ class MailService {
                 limit(count = 1)
             }  .decodeSingle<Teacher>()
 
-        MailSender().sendMail(subject, summary!!, response.mail)
+        MailSender.sendMail(subject, summary!!, response.mail)
     }
 }

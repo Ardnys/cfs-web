@@ -88,7 +88,6 @@ suspend fun callSamurai(f: Feedback) {
 
     println("nice feedback: $feedbackText")
 
-    return
     val response: HttpResponse = client.request("http://localhost:7878/summarize") {
         method = HttpMethod.Post
         setBody(feedbackText)

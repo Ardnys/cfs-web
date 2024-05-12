@@ -25,7 +25,7 @@ import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import io.ktor.util.logging.*
-class MailSender {
+object  MailSender {
     private val service: Gmail
     private val logger = KtorSimpleLogger("mail logger")
     init {
