@@ -1,5 +1,6 @@
 package com.example.utils
 
+import com.example.MailService
 import com.example.models.Feedback
 import com.example.models.StudentFeedback
 import io.github.jan.supabase.postgrest.from
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(DelicateCoroutinesApi::class)
 fun startBackgroundProcess() = runBlocking {
+    MailService().mailListener()
     val dur: Duration = 30.seconds
     println("Starting background process...")
     while (true) {
@@ -86,6 +88,7 @@ suspend fun callSamurai(f: Feedback) {
 
     println("nice feedback: $feedbackText")
 
+    return
     val response: HttpResponse = client.request("http://localhost:7878/summarize") {
         method = HttpMethod.Post
         setBody(feedbackText)

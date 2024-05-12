@@ -1,33 +1,49 @@
 package com.example
 
+import com.example.models.*
 import com.example.utils.MailSender
-import io.github.jan.supabase.SupabaseClient
+import com.example.utils.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
-import jdk.internal.net.http.common.Log.channel
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
+import java.time.OffsetDateTime
 
-class MailService(private val supabaseClient : SupabaseClient) {
-    init {
-//        val listener = supabaseClient
-//            .from("feedbacks")
-//            .on("*") { payload ->
-//                if (payload.eventType == "INSERT") {
-//                    GlobalScope.launch(Dispatchers.IO) {
-//                        sendURLToStudents()
-//                    }
-//                } else if (payload.eventType == "UPDATE" && payload.newRecord["summary"] != "null") {
-//                    GlobalScope.launch(Dispatchers.IO) {
-//                        sendSummaryToTeacher()
-//                    }
-//                } else { }
-//            }
-//            .subscribe()
+class MailService {
+    private var courseId: Int? = null
+    private var courseDate: OffsetDateTime? = null
+    private var summary: String? = null.toString()
+    private var url: String? = null
+    private val json = Json
+
+    suspend fun mailListener() {
+        val channel = supabase.channel("mailer")
+        val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+            table = "feedbacks"
+        }
+        changeFlow.onEach { action ->
+            if (action is PostgresAction.Insert) {
+                val feedback = json.decodeFromString<Feedback>(action.record.toString())
+                courseId = feedback.courseId
+                courseDate = feedback.courseDate
+                url = feedback.url
+                sendURLToStudents()
+            } else if (action is PostgresAction.Update) {
+                val feedback = json.decodeFromString<Feedback>(action.record.toString())
+                summary = feedback.summary
+                sendSummaryToTeacher()
+            }
+        }.launchIn(CoroutineScope(Dispatchers.IO))
+        supabase.realtime.connect()
+        channel.subscribe()
     }
 
     private suspend fun sendURLToStudents() {
@@ -35,82 +51,78 @@ class MailService(private val supabaseClient : SupabaseClient) {
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender().sendMail(subject, message, mail)
+            MailSender().sendMail(subject, message, mail.toString())
         }
     }
 
     private suspend fun createMessageForStudent(): String {
-        val courseName = supabaseClient
-            .from("feedbacks")
-            .select(columns = Columns.list("course_name")) {
-                order(column = "id", order = Order.ASCENDING)
-                limit(count = 1)
-            }  .decodeSingle<String>()
-        val url = supabaseClient
-            .from("feedbacks")
-            .select(columns = Columns.list("url")) {
-                order(column = "id", order = Order.ASCENDING)
-                limit(count = 1)
-            }  .decodeSingle<String>()
+        val response = supabase
+            .from("courses")
+            .select(columns = Columns.list("id","course_name","course_code")) {
+                filter {
+                    eq("id", courseId!!)
+                }
+            }  .decodeSingle<Course>()
+
         val message = """
             Dear student,
                             
-            Dear student you can access the feedback form created for the last class about our course $courseName here $url. Your input is valued.
+            Dear student you can access the feedback form created for the last class about our course ${response.courseCode} here $url. Your input is valued.
                             
             Best regards,
             """
         return message
     }
 
-    private suspend fun getEnrolledStudentsMails(): List<String> {
-        val courseId = getLastFeedbacksCourseId()
+    private suspend fun getEnrolledStudentsMails(): List<Any> {
+        val studentMails = mutableListOf<Any>()
+        val studentIds =getEnrolledStudentIds()
 
-        val studentMailsResponse = supabaseClient
+        val response = supabase
             .from("students")
-            .select(columns = Columns.list("mail")) {
+            .select(columns = Columns.list("id","name","surname","mail")) {
                 filter {
-                    "student_id" in supabaseClient
-                        .from("student_courses")
-                        .select(columns = Columns.list("student_id")) {
-                            filter {
-                                eq("course_id", courseId)
-                            }
-
-                        }
-                        .decodeList<String>()
+                    isIn("id",studentIds)
                 }
+            }.decodeList<Student>()
+
+        response.forEach { students ->
+            students.mail.let {
+                studentMails.add(it)
             }
-            .decodeList<String>()
-        return studentMailsResponse
+        }
+
+        return studentMails
     }
 
-    private suspend fun getLastFeedbacksCourseId(): Int {
-        val courseId = supabaseClient
-            .from("feedbacks")
-            .select(columns = Columns.list("course_id")) {
-                order(column = "id", order = Order.ASCENDING)
-                limit(count = 1)
+    private suspend fun getEnrolledStudentIds(): List<Any>{
+        val idList = mutableListOf<Any>()
+        val response = supabase
+            .from("student_courses")
+            .select(Columns.raw("student_id, course_id")) {
+                filter {
+                    eq("course_id",courseId!!)
+                }
+            }.decodeList<StudentCourses>()
 
-            }  .decodeSingle<Int>()
+         response.forEach { studentCourses ->
+            studentCourses.studentId.let {
+                idList.add(it!!)
+            }
+         }
 
-        return  courseId
+        return idList
     }
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
-        val authenticatedTeacher = supabaseClient.
+        val response = supabase.
                 from("teachers")
-                .select(columns = Columns.list("mail")) {
-                order(column = "id", order = Order.ASCENDING)
+                .select(columns = Columns.list("mail","name","surname")) {
+                order(column = "id", order = Order.DESCENDING)
                 limit(count = 1)
-            }  .decodeSingle<String>()
+            }  .decodeSingle<Teacher>()
 
-        val summary =  supabaseClient
-            .from("feedbacks")
-            .select(columns = Columns.list("summary")) {
-                order(column = "id", order = Order.ASCENDING)
-                limit(count = 1)
-            }  .decodeSingle<String>()
-        MailSender().sendMail(subject, summary, authenticatedTeacher)
+        MailSender().sendMail(subject, summary!!, response.mail)
     }
 }
