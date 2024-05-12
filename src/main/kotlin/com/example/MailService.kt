@@ -68,7 +68,7 @@ class MailService {
         val message = """
             Dear student,
                             
-            A feedback form regarding our last class of ${response.courseCode} is created. You can access it from here $url. Your input is valued.
+            A feedback form regarding our last class of ${response.courseCode} (${response.courseName}) is created. You can access it from here $url. Your input is valued.
                             
             Best regards,
             """
