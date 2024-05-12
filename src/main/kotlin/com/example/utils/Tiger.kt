@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(DelicateCoroutinesApi::class)
 fun startBackgroundProcess() = runBlocking {
-    MailService().mailListener()
+    MailService.mailListener()
     val dur: Duration = 30.seconds
     println("Starting background process...")
     while (true) {

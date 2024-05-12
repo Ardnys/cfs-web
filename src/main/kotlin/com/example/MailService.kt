@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
 import java.time.OffsetDateTime
 
-class MailService {
+object MailService {
     private var courseId: Int? = null
     private var courseDate: OffsetDateTime? = null
     private var summary: String? = null.toString()
