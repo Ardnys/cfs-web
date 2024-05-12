@@ -4,6 +4,9 @@ from g4f.client import AsyncClient
 import asyncio
 from aiohttp import web
 
+# ignore the UserWarning
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 client = AsyncClient()
 
 async def summarize(request):
@@ -24,4 +27,4 @@ app = web.Application()
 app.add_routes([web.post('/summarize', summarize)])
 
 if __name__ == "__main__":
-    web.run_app(app, port=7878)
+    web.run_app(app, host='localhost', port=7878)
