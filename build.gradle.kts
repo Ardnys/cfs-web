@@ -24,6 +24,7 @@ repositories {
 }
 
 dependencies {
+    implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
@@ -34,7 +35,16 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation(platform("io.github.jan-tennert.supabase:bom:$supabase_version"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-cio-jvm:2.3.10")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("com.google.api-client:google-api-client:2.0.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.11.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("com.google.oauth-client:google-oauth-client-jetty:1.34.1")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.4.2")
+    implementation("javax.mail:javax.mail-api:1.6.2")
+    implementation("com.google.apis:google-api-services-gmail:v1-rev20220404-2.0.0")
+    implementation("com.sun.mail:javax.mail:1.6.2")
 }

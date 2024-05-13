@@ -84,7 +84,7 @@ fun Application.configureRouting() {
                 val feedback = Feedback(
                     courseDate = request.date,
                     courseTopic = request.topic,
-                    courseId = course.id,
+                    courseId = course.id!!,
                     url = "feedback/${course.courseCode}",
                     feedbackStartDate = OffsetDateTime.now(ZoneId.systemDefault())
                 )
