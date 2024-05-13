@@ -1,8 +1,7 @@
 <#macro header>
     <!DOCTYPE html>
     <html lang="en">
-<#-- TODO where is this -->
-<#--    <#include "css/style.ftl">-->
+    <#include "css/style.ftl">
     <head>
         <title>Kotlin Journal</title>
     </head>
