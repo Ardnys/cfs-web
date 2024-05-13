@@ -2,7 +2,7 @@ package com.example
 
 import com.example.models.*
 import com.example.utils.MailSender
-import com.example.utils.supabase
+import com.example.plugins.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order

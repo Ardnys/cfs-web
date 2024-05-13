@@ -24,6 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 internal val LOGGER = KtorSimpleLogger("Tiger Logger")
 
 fun startBackgroundProcess() = runBlocking {
+    MailService.mailListener()
     val dur: Duration = 30.seconds
     LOGGER.info("Starting background process...")
     while (true) {
@@ -93,7 +94,6 @@ private suspend fun summarize(f: Feedback) {
         .decodeList<StudentFeedback>()
 
     val feedbackText = studentFeedback.joinToString(separator = ". ") { it.feedback.trim() }
-
     val response = callSamurai(feedbackText)
 
     when (response.status.value) {
