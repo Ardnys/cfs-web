@@ -48,11 +48,11 @@ object MailService {
     }
 
     private suspend fun sendURLToStudents() {
-        val subject = "Feedback Form URL"
+        val subject = "No feedback?(,,>﹏<,,)"
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender.sendMail(subject, message, mail)
+            MailSender.sendMail(subject, message, mail,true)
         }
     }
 
@@ -66,12 +66,17 @@ object MailService {
             }  .decodeSingle<Course>()
 
         val message = """
-            Dear student,
-                            
-            A feedback form regarding our last class of ${response.courseCode} (${response.courseName}) is created. You can access it from here $url. Your input is valued.
-                            
-            Best regards,
-            """
+            <html>
+            <body style="font-family: Verdana; color: #777777;">
+                <p>Our precious student♡,</p>
+                <p>Yor feedback regarding our last class of ${response.courseCode} (${response.courseName}) is required for you 🫵🏻 to pass your class.</p>
+                <p>You can access the form from here ---> $url.<p>
+                <p>XOX,<p>
+                <br><br>
+                <img src="https://content.imageresizer.com/images/memes/Megamind-no-bitches-meme-65939r.jpg" alt="Feedback Form">
+            </body>
+            </html>
+        """
         return message
     }
 

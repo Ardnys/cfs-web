@@ -64,32 +64,53 @@ object  MailSender {
     }
 
     @Throws(Exception::class)
-    fun sendMail(subject: String, message: String, receiver: String) {
+    private fun createMessage(subject: String, body: String, receiver: String, isHtml: Boolean = false): Message {
         val props = Properties()
         val session = Session.getDefaultInstance(props, null)
         val email = MimeMessage(session)
-        email.addRecipient(TO, InternetAddress(receiver))
+        email.addRecipient(MimeMessage.RecipientType.TO, InternetAddress(receiver))
         email.subject = subject
-        email.setText(message)
+        if (isHtml) {
+            email.setContent(body, "text/html; charset=utf-8")
+        } else {
+            email.setText(body)
+        }
 
+        return createEncodedMessage(email)
+    }
+
+    private fun createEncodedMessage(email: MimeMessage): Message {
         val buffer = ByteArrayOutputStream()
         email.writeTo(buffer)
         val rawMessageBytes = buffer.toByteArray()
         val encodedEmail = Base64.getUrlEncoder().encodeToString(rawMessageBytes)
-        var msg = Message()
+        val msg = Message()
         msg.raw = encodedEmail
 
+        return msg
+    }
+    @Throws(Exception::class)
+    fun sendMail(subject: String, message: String, receiver: String, isHtml: Boolean = false) {
+        val emailMessage: Message
+        if (isHtml) {
+            val htmlMessage = createMessage(subject, message, receiver,true)
+            emailMessage = htmlMessage
+        } else {
+            val textMessage = createMessage(subject, message, receiver)
+            emailMessage = textMessage
+        }
         try {
-            logger.info("Message id: " + msg.id)
-            logger.info(msg.toPrettyString())
-            service.users().messages().send("me", msg).execute()
+            logger.info("Message id: ${emailMessage.id}")
+            logger.info(emailMessage.toPrettyString())
+            service.users().messages().send("me", emailMessage).execute()
         } catch (e: GoogleJsonResponseException) {
             val error = e.details
             if (error.code == 403) {
-                logger.error("Unable to send message: " + e.details)
+                logger.error("Unable to send message: ${e.details}")
             } else {
                 throw e
             }
         }
     }
+
 }
