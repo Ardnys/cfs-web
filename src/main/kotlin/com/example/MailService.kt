@@ -1,8 +1,8 @@
 package com.example
 
 import com.example.models.*
-import com.example.utils.MailSender
 import com.example.plugins.supabase
+import com.example.utils.MailSender
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
@@ -59,11 +59,11 @@ object MailService {
     private suspend fun createMessageForStudent(): String {
         val response = supabase
             .from("courses")
-            .select(columns = Columns.list("id","course_name","course_code")) {
+            .select(columns = Columns.list("id", "course_name", "course_code")) {
                 filter {
                     eq("id", courseId!!)
                 }
-            }  .decodeSingle<Course>()
+            }.decodeSingle<Course>()
 
         val message = """
             Dear student,
@@ -77,13 +77,13 @@ object MailService {
 
     private suspend fun getEnrolledStudentsMails(): List<String> {
         val studentMails = mutableListOf<String>()
-        val studentIds =getEnrolledStudentIds()
+        val studentIds = getEnrolledStudentIds()
 
         val response = supabase
             .from("students")
-            .select(columns = Columns.list("id","name","surname","mail")) {
+            .select(columns = Columns.list("id", "name", "surname", "mail")) {
                 filter {
-                    isIn("id",studentIds)
+                    isIn("id", studentIds)
                 }
             }.decodeList<Student>()
 
@@ -94,17 +94,17 @@ object MailService {
         return studentMails
     }
 
-    private suspend fun getEnrolledStudentIds(): List<Int>{
+    private suspend fun getEnrolledStudentIds(): List<Int> {
         val idList = mutableListOf<Int>()
         val response = supabase
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
                 filter {
-                    eq("course_id",courseId!!)
+                    eq("course_id", courseId!!)
                 }
             }.decodeList<StudentCourses>()
 
-        for (id in response){
+        for (id in response) {
             idList.add(id.studentId!!)
         }
 
@@ -113,12 +113,11 @@ object MailService {
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
-        val response = supabase.
-                from("teachers")
-                .select(columns = Columns.list("mail","name","surname")) {
+        val response = supabase.from("teachers")
+            .select(columns = Columns.list("mail", "name", "surname")) {
                 order(column = "id", order = Order.DESCENDING)
                 limit(count = 1)
-            }  .decodeSingle<Teacher>()
+            }.decodeSingle<Teacher>()
 
         MailSender.sendMail(subject, summary!!, response.mail)
     }

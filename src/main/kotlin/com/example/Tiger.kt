@@ -13,7 +13,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.logging.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
 import java.net.ConnectException
 import java.time.OffsetDateTime
 import kotlin.time.Duration
@@ -130,7 +133,7 @@ private suspend fun summarize(f: Feedback) {
     }
 }
 
-private suspend fun callSamurai(feedbackText: String) : HttpResponse {
+private suspend fun callSamurai(feedbackText: String): HttpResponse {
     return try {
         client.request("http://localhost:7878/summarize") {
             method = HttpMethod.Post
