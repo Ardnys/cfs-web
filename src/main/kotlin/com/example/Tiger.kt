@@ -13,9 +13,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.logging.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.net.ConnectException
 import java.time.OffsetDateTime
 import kotlin.time.Duration
@@ -27,7 +25,8 @@ fun startBackgroundProcess() = runBlocking {
     MailService.mailListener()
     val dur: Duration = 30.seconds
     LOGGER.info("Starting background process...")
-    while (true) {
+
+    while (isActive) {
         val feedback = async {
             checkFeedbackDecay()
         }.await()
@@ -39,6 +38,7 @@ fun startBackgroundProcess() = runBlocking {
         delay(dur)
     }
 }
+
 
 private suspend fun checkFeedbackDecay(): List<Feedback> {
     LOGGER.info("Checking feedback...")
@@ -138,6 +138,27 @@ private suspend fun callSamurai(feedbackText: String) : HttpResponse {
         }
     } catch (e: ConnectException) {
         val message = "Samurai is not available at the moment: ${e.message ?: e.toString()}"
+        LOGGER.error(message)
+        throw SamuraiUnavailableException(message)
+    }
+}
+
+// shut down samurai as well
+fun fallFromGrace() {
+    // just block it I guess why not
+    runBlocking {
+        LOGGER.info("Samurai shutting down...")
+        shutdownSamurai()
+    }
+}
+
+private suspend fun shutdownSamurai() {
+    try {
+        client.request("http://localhost:7878/shutdown") {
+            method = HttpMethod.Get
+        }
+    } catch (e: ConnectException) {
+        val message = "Tried to shutdown Samurai, but it was already down: ${e.message ?: e.toString()}"
         LOGGER.error(message)
         throw SamuraiUnavailableException(message)
     }
