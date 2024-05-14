@@ -10,11 +10,11 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
-import java.util.Base64
 import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes.GMAIL_SEND
 import com.google.api.services.gmail.model.Message
+import io.ktor.util.logging.*
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -24,10 +24,11 @@ import javax.mail.Message.RecipientType.TO
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import io.ktor.util.logging.*
-object  MailSender {
+
+object MailSender {
     private val service: Gmail
     private val logger = KtorSimpleLogger("mail logger")
+
     init {
         val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
         val jsonFactory = GsonFactory.getDefaultInstance()
@@ -40,7 +41,7 @@ object  MailSender {
     private fun getCredentials(httpTransport: NetHttpTransport, jsonFactory: GsonFactory): Credential {
         val clientSecretJson = System.getenv("CLIENT_SECRET_PATH")
 
-        var clientSecrets: GoogleClientSecrets? = null
+        val clientSecrets: GoogleClientSecrets?
         try {
             clientSecrets = GoogleClientSecrets.load(
                 jsonFactory,
@@ -54,7 +55,8 @@ object  MailSender {
         }
 
         val flow = GoogleAuthorizationCodeFlow.Builder(
-            httpTransport, jsonFactory, clientSecrets, setOf(GMAIL_SEND))
+            httpTransport, jsonFactory, clientSecrets, setOf(GMAIL_SEND)
+        )
             .setDataStoreFactory(FileDataStoreFactory(Paths.get("tokens").toFile()))
             .setAccessType("offline")
             .build()
@@ -76,7 +78,7 @@ object  MailSender {
         email.writeTo(buffer)
         val rawMessageBytes = buffer.toByteArray()
         val encodedEmail = Base64.getUrlEncoder().encodeToString(rawMessageBytes)
-        var msg = Message()
+        val msg = Message()
         msg.raw = encodedEmail
 
         try {
