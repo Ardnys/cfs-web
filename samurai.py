@@ -3,11 +3,16 @@
 from g4f.client import AsyncClient
 import asyncio
 from aiohttp import web
+from aiohttp.web import GracefulExit
 
-# ignore the UserWarning
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 client = AsyncClient()
+
+async def shutdown(request):
+    print("shutting down...")
+    raise GracefulExit()
+
 
 async def summarize(request):
     summary_content = await request.text()
@@ -24,7 +29,7 @@ async def summarize(request):
     return web.Response(text=summary)
 
 app = web.Application()
-app.add_routes([web.post('/summarize', summarize)])
+app.add_routes([web.post('/summarize', summarize), web.get('/shutdown', shutdown)])
 
 if __name__ == "__main__":
     web.run_app(app, host='localhost', port=7878)
