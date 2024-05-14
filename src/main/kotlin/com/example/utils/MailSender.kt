@@ -91,13 +91,10 @@ object  MailSender {
     }
     @Throws(Exception::class)
     fun sendMail(subject: String, message: String, receiver: String, isHtml: Boolean = false) {
-        val emailMessage: Message
-        if (isHtml) {
-            val htmlMessage = createMessage(subject, message, receiver,true)
-            emailMessage = htmlMessage
+        val emailMessage: Message = if (isHtml) {
+            createMessage(subject, message, receiver,true)
         } else {
-            val textMessage = createMessage(subject, message, receiver)
-            emailMessage = textMessage
+            createMessage(subject, message, receiver)
         }
         try {
             logger.info("Message id: ${emailMessage.id}")
