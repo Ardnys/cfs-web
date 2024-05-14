@@ -18,12 +18,9 @@ import kotlinx.serialization.json.Json
 import java.time.OffsetDateTime
 
 object MailService {
-    private var lastFeedbacksCourseId: Int? = null
-    private var lastFeedbacksDate: OffsetDateTime? = null
-    private var lastFeedbacksSummary: String? = null.toString()
-    private var lastFeedbacksUrl: String? = null
+
     private val json = Json
-    private var feedback: Feedback? = null
+    private var lastFeedback: Feedback? = null
   
     suspend fun mailListener() {
         val channel = supabase.channel("mailer")
@@ -32,14 +29,9 @@ object MailService {
         }
         changeFlow.onEach { action ->
             if (action is PostgresAction.Insert) {
-                feedback = json.decodeFromString<Feedback>(action.record.toString())
-                lastFeedbacksCourseId = feedback!!.courseId
-                lastFeedbacksDate = feedback!!.courseDate
-                lastFeedbacksUrl = feedback!!.url
+                lastFeedback = json.decodeFromString<Feedback>(action.record.toString())
                 sendURLToStudents()
             } else if (action is PostgresAction.Update) {
-                feedback = json.decodeFromString<Feedback>(action.record.toString())
-                lastFeedbacksSummary = feedback!!.summary
                 sendSummaryToTeacher()
             }
         }.launchIn(CoroutineScope(Dispatchers.IO))
@@ -61,7 +53,7 @@ object MailService {
             .from("courses")
             .select(columns = Columns.list("id","course_name","course_code")) {
                 filter {
-                    eq("id", lastFeedbacksCourseId!!)
+                    eq("id", lastFeedback?.courseId!!)
                 }
             }  .decodeSingle<Course>()
 
@@ -70,7 +62,7 @@ object MailService {
             <body style="font-family: Verdana; color: #777777;">
                 <p>Our precious student♡,</p>
                 <p>Yor feedback regarding our last class of ${response.courseCode} (${response.courseName}) is required for you 🫵🏻 to pass your class.</p>
-                <p>You can access the form from here ---> $lastFeedbacksUrl.<p>
+                <p>You can access the form from here ---> ${lastFeedback?.url}.<p>
                 <p>XOX,<p>
                 <br><br>
                 <img src="https://content.imageresizer.com/images/memes/Megamind-no-bitches-meme-65939r.jpg" alt="Feedback Form">
@@ -105,7 +97,7 @@ object MailService {
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
                 filter {
-                    eq("course_id",lastFeedbacksCourseId!!)
+                    eq("course_id", lastFeedback?.courseId!!)
                 }
             }.decodeList<StudentCourses>()
 
@@ -125,6 +117,6 @@ object MailService {
                 limit(count = 1)
             }  .decodeSingle<Teacher>()
 
-        MailSender.sendMail(subject, lastFeedbacksSummary!!, response.mail)
+        MailSender.sendMail(subject, lastFeedback?.summary!!, response.mail)
     }
 }
