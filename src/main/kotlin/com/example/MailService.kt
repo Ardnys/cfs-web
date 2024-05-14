@@ -1,8 +1,8 @@
 package com.example
 
 import com.example.models.*
-import com.example.plugins.supabase
 import com.example.utils.MailSender
+import com.example.plugins.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
@@ -23,7 +23,7 @@ object MailService {
     private var summary: String? = null.toString()
     private var url: String? = null
     private val json = Json
-    private var feedback: Feedback? = null
+    private var lastFeedback: Feedback? = null
 
     suspend fun mailListener() {
         val channel = supabase.channel("mailer")
@@ -32,14 +32,9 @@ object MailService {
         }
         changeFlow.onEach { action ->
             if (action is PostgresAction.Insert) {
-                feedback = json.decodeFromString<Feedback>(action.record.toString())
-                courseId = feedback!!.courseId
-                courseDate = feedback!!.courseDate
-                url = feedback!!.url
+                lastFeedback = json.decodeFromString<Feedback>(action.record.toString())
                 sendURLToStudents()
             } else if (action is PostgresAction.Update) {
-                feedback = json.decodeFromString<Feedback>(action.record.toString())
-                summary = feedback!!.summary
                 sendSummaryToTeacher()
             }
         }.launchIn(CoroutineScope(Dispatchers.IO))
@@ -48,11 +43,11 @@ object MailService {
     }
 
     private suspend fun sendURLToStudents() {
-        val subject = "Feedback Form URL"
+        val subject = "No feedback?(,,>﹏<,,)"
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender.sendMail(subject, message, mail)
+            MailSender.sendMail(subject, message, mail,true)
         }
     }
 
@@ -61,17 +56,22 @@ object MailService {
             .from("courses")
             .select(columns = Columns.list("id", "course_name", "course_code")) {
                 filter {
-                    eq("id", courseId!!)
+                    eq("id", lastFeedback?.courseId!!)
                 }
             }.decodeSingle<Course>()
 
         val message = """
-            Dear student,
-                            
-            A feedback form regarding our last class of ${response.courseCode} (${response.courseName}) is created. You can access it from here $url. Your input is valued.
-                            
-            Best regards,
-            """
+            <html>
+            <body style="font-family: Verdana; color: #777777;">
+                <p>Our precious student♡,</p>
+                <p>Yor feedback regarding our last class of ${response.courseCode} (${response.courseName}) is required for you 🫵🏻 to pass your class.</p>
+                <p>You can access the form from here ---> ${lastFeedback?.url}.<p>
+                <p>XOX,<p>
+                <br><br>
+                <img src="https://content.imageresizer.com/images/memes/Megamind-no-bitches-meme-65939r.jpg" alt="Feedback Form">
+            </body>
+            </html>
+        """
         return message
     }
 
@@ -100,7 +100,7 @@ object MailService {
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
                 filter {
-                    eq("course_id", courseId!!)
+                    eq("course_id", lastFeedback?.courseId!!)
                 }
             }.decodeList<StudentCourses>()
 
@@ -119,6 +119,6 @@ object MailService {
                 limit(count = 1)
             }.decodeSingle<Teacher>()
 
-        MailSender.sendMail(subject, summary!!, response.mail)
+        MailSender.sendMail(subject, lastFeedback?.summary!!, response.mail)
     }
 }
