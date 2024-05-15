@@ -20,7 +20,6 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.nio.file.Paths
 import java.util.*
-import javax.mail.Message.RecipientType.TO
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
@@ -91,10 +90,11 @@ object MailSender {
 
         return msg
     }
+
     @Throws(Exception::class)
     fun sendMail(subject: String, message: String, receiver: String, isHtml: Boolean = false) {
         val emailMessage: Message = if (isHtml) {
-            createMessage(subject, message, receiver,true)
+            createMessage(subject, message, receiver, true)
         } else {
             createMessage(subject, message, receiver)
         }

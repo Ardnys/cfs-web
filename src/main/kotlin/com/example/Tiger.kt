@@ -23,6 +23,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 internal val LOGGER = KtorSimpleLogger("Tiger Logger")
+private val client = HttpClient(CIO)
 
 fun startBackgroundProcess() = runBlocking {
     MailService.mailListener()
@@ -37,11 +38,20 @@ fun startBackgroundProcess() = runBlocking {
             for (f in feedback) {
                 summarize(f)
             }
+            setExpiredUrlToNull()
         }
         delay(dur)
     }
 }
 
+// shut down samurai as well
+fun tigerCleanup() {
+    // just block it I guess why not
+    runBlocking {
+        LOGGER.info("Samurai shutting down...")
+        shutdownSamurai()
+    }
+}
 
 private suspend fun checkFeedbackDecay(): List<Feedback> {
     LOGGER.info("Checking feedback...")
@@ -64,6 +74,13 @@ private suspend fun checkFeedbackDecay(): List<Feedback> {
         return emptyList()
     }
     // set them url to null, they aren't active anymore
+    for (f in feedback) {
+        LOGGER.info("these are expired: ${f.id} -> ${f.courseTopic}")
+    }
+    return feedback
+}
+
+private suspend fun setExpiredUrlToNull() {
     supabase
         .from("feedbacks")
         .update(
@@ -77,14 +94,10 @@ private suspend fun checkFeedbackDecay(): List<Feedback> {
         }
 
     LOGGER.info("Expired feedback urls set to null.")
-    return feedback
 }
 
-private val client = HttpClient(CIO)
-
-
 private suspend fun summarize(f: Feedback) {
-    LOGGER.info("Samurai is called for ${f.courseTopic}")
+    LOGGER.info("Samurai is called for ${f.courseTopic} with id ${f.id}")
 
     val studentFeedback = supabase
         .from("student_feedbacks")
@@ -103,6 +116,7 @@ private suspend fun summarize(f: Feedback) {
         200 -> {
             LOGGER.info("200: Feedback for topic ${f.courseTopic} is summarized successfully.")
             val summarizedText = response.body<String>()
+            LOGGER.info("Summary: $summarizedText")
 
             supabase
                 .from("feedbacks")
@@ -146,14 +160,6 @@ private suspend fun callSamurai(feedbackText: String): HttpResponse {
     }
 }
 
-// shut down samurai as well
-fun fallFromGrace() {
-    // just block it I guess why not
-    runBlocking {
-        LOGGER.info("Samurai shutting down...")
-        shutdownSamurai()
-    }
-}
 
 private suspend fun shutdownSamurai() {
     try {
