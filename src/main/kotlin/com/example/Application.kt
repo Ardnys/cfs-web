@@ -35,9 +35,7 @@ fun Application.module() {
     configureStatusPages()
 
     environment.monitor.subscribe(ApplicationStopping) {
-        // clean the tiger
-        fallFromGrace()
-
+        tigerCleanup()
         println("Application stopped")
     }
 }

@@ -1,8 +1,8 @@
 package com.example
 
 import com.example.models.*
-import com.example.utils.MailSender
 import com.example.plugins.supabase
+import com.example.utils.MailSender
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.realtime.PostgresAction
@@ -29,6 +29,8 @@ object MailService {
                 lastFeedback = json.decodeFromString<Feedback>(action.record.toString())
                 sendURLToStudents()
             } else if (action is PostgresAction.Update) {
+                lastFeedback = json.decodeFromString<Feedback>(action.record.toString())
+                println(action.record.toString())
                 sendSummaryToTeacher()
             }
         }.launchIn(CoroutineScope(Dispatchers.IO))
@@ -41,14 +43,14 @@ object MailService {
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
         for (mail in enrolledStudentsMails) {
-            MailSender.sendMail(subject, message, mail,true)
+            MailSender.sendMail(subject, message, mail, true)
         }
     }
 
     private suspend fun createMessageForStudent(): String {
         val response = supabase
             .from("courses")
-            .select(columns = Columns.list("id", "course_name", "course_code","teacher_id")) {
+            .select(columns = Columns.list("id", "course_name", "course_code", "teacher_id")) {
                 filter {
                     eq("id", lastFeedback?.courseId!!)
                 }
@@ -107,11 +109,12 @@ object MailService {
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
+        println("sending summary to: ${lastFeedback?.courseTopic}")
         val response = supabase
             .from("teachers")
             .select(Columns.raw("id,name,surname,mail")) {
                 filter {
-                    eq( "id", getTeacherId())
+                    eq("id", getTeacherId())
                 }
             }.decodeSingle<Teacher>()
 
@@ -121,7 +124,7 @@ object MailService {
     private suspend fun getTeacherId(): Int {
         val response = supabase
             .from("courses")
-            .select(columns = Columns.list("id", "course_name", "course_code","teacher_id")) {
+            .select(columns = Columns.list("id", "course_name", "course_code", "teacher_id")) {
                 filter {
                     eq("id", lastFeedback?.courseId!!)
                 }
