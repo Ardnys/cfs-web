@@ -9,6 +9,7 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
+import io.ktor.util.logging.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.Json
 object MailService {
     private val json = Json
     private var lastFeedback: Feedback? = null
+    private val logger = KtorSimpleLogger("mail service logger")
 
     suspend fun mailListener() {
         val channel = supabase.channel("mailer")
@@ -30,7 +32,6 @@ object MailService {
                 sendURLToStudents()
             } else if (action is PostgresAction.Update) {
                 lastFeedback = json.decodeFromString<Feedback>(action.record.toString())
-                println(action.record.toString())
                 sendSummaryToTeacher()
             }
         }.launchIn(CoroutineScope(Dispatchers.IO))
@@ -42,6 +43,7 @@ object MailService {
         val subject = "No feedback?(,,>﹏<,,)"
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
+        logger.info("sending summary to students")
         for (mail in enrolledStudentsMails) {
             MailSender.sendMail(subject, message, mail, true)
         }
@@ -103,13 +105,18 @@ object MailService {
         for (id in response) {
             idList.add(id.studentId!!)
         }
-
         return idList
     }
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
-        println("sending summary to: ${lastFeedback?.courseTopic}")
+        if(lastFeedback?.summary == null){
+            logger.info("Feedback summary is not created yet!")
+            return
+        } else if (lastFeedback?.url == null){
+            logger.info("Feedback summary is already sent!")
+            return
+        }
         val response = supabase
             .from("teachers")
             .select(Columns.raw("id,name,surname,mail")) {
@@ -117,7 +124,7 @@ object MailService {
                     eq("id", getTeacherId())
                 }
             }.decodeSingle<Teacher>()
-
+        logger.info("sending summary to teacher: ${response.mail}")
         MailSender.sendMail(subject, lastFeedback?.summary!!, response.mail)
     }
 
