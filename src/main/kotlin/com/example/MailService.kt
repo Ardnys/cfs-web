@@ -98,7 +98,8 @@ object MailService {
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
                 filter {
-                    eq("course_id", lastFeedback?.courseId!!)
+                    if (lastFeedback?.courseId != null)
+                        eq("course_id", lastFeedback?.courseId!!)
                 }
             }.decodeList<StudentCourses>()
 
@@ -117,15 +118,16 @@ object MailService {
             logger.info("Feedback summary is already sent!")
             return
         }
-        val response = supabase
+        val teacher = supabase
             .from("teachers")
             .select(Columns.raw("id,name,surname,mail")) {
                 filter {
                     eq("id", getTeacherId())
                 }
             }.decodeSingle<Teacher>()
-        logger.info("sending summary to teacher: ${response.mail}")
-        MailSender.sendMail(subject, lastFeedback?.summary!!, response.mail)
+        val message = createMessageForTeacher()
+        logger.info("sending summary to teacher: ${teacher.mail}")
+        MailSender.sendMail(subject,message ,teacher.mail)
     }
 
     private suspend fun getTeacherId(): Int {
@@ -137,5 +139,21 @@ object MailService {
                 }
             }.decodeSingle<Course>()
         return response.teacherId!!
+    }
+
+    private suspend fun createMessageForTeacher(): String {
+        val response = supabase
+            .from("courses")
+            .select(columns = Columns.list("id", "course_name", "course_code", "teacher_id")) {
+                filter {
+                    eq("id", lastFeedback?.courseId!!)
+                }
+            }.decodeSingle<Course>()
+        val message = """
+            Summarized feedbacks for the course ${response.courseCode} (${response.courseName}) scheduled on ${lastFeedback?.courseDate}:
+            
+            ${lastFeedback?.summary!!}
+        """
+        return message
     }
 }
