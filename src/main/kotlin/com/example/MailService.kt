@@ -5,7 +5,6 @@ import com.example.utils.MailSender
 import com.example.plugins.supabase
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
-import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
@@ -15,13 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
-import java.time.OffsetDateTime
 
 object MailService {
-    private var courseId: Int? = null
-    private var courseDate: OffsetDateTime? = null
-    private var summary: String? = null.toString()
-    private var url: String? = null
     private val json = Json
     private var lastFeedback: Feedback? = null
 
@@ -54,7 +48,7 @@ object MailService {
     private suspend fun createMessageForStudent(): String {
         val response = supabase
             .from("courses")
-            .select(columns = Columns.list("id", "course_name", "course_code")) {
+            .select(columns = Columns.list("id", "course_name", "course_code","teacher_id")) {
                 filter {
                     eq("id", lastFeedback?.courseId!!)
                 }
@@ -113,12 +107,25 @@ object MailService {
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
-        val response = supabase.from("teachers")
-            .select(columns = Columns.list("mail", "name", "surname")) {
-                order(column = "id", order = Order.DESCENDING)
-                limit(count = 1)
+        val response = supabase
+            .from("teachers")
+            .select(Columns.raw("id,name,surname,mail")) {
+                filter {
+                    eq( "id", getTeacherId())
+                }
             }.decodeSingle<Teacher>()
 
         MailSender.sendMail(subject, lastFeedback?.summary!!, response.mail)
+    }
+
+    private suspend fun getTeacherId(): Int {
+        val response = supabase
+            .from("courses")
+            .select(columns = Columns.list("id", "course_name", "course_code","teacher_id")) {
+                filter {
+                    eq("id", lastFeedback?.courseId!!)
+                }
+            }.decodeSingle<Course>()
+        return response.teacherId!!
     }
 }
