@@ -20,8 +20,9 @@ object MailService {
     private val json = Json
     private var lastFeedback: Feedback? = null
     private val logger = KtorSimpleLogger("mail service logger")
+    private var lastCourse: Course? = null
 
-    suspend fun mailListener() {
+     suspend fun mailListener() {
         val channel = supabase.channel("mailer")
         val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "feedbacks"
@@ -40,25 +41,26 @@ object MailService {
     }
 
     private suspend fun sendURLToStudents() {
-        val subject = "No feedback?(,,>﹏<,,)"
+        val subject = "Feedback Form"
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
-        logger.info("sending feedback form for the course ${getLastFeedbacksCourseDetails().courseCode} (${getLastFeedbacksCourseDetails().courseName}), to registered students!")
+        logger.info("sending feedback form for the course ${lastCourse?.courseCode} (${lastCourse?.courseName}), to registered students!")
         for (mail in enrolledStudentsMails) {
             MailSender.sendMail(subject, message, mail, true)
         }
     }
 
     private suspend fun createMessageForStudent(): String {
+        lastCourse = getLastFeedbacksCourseDetails()
         val message = """
             <html>
             <body style="font-family: Verdana; color: #777777;">
-                <p>Our precious student♡,</p>
-                <p>Yor feedback regarding our last class of ${getLastFeedbacksCourseDetails().courseCode} (${getLastFeedbacksCourseDetails().courseName}) is required for you 🫵🏻 to pass your class.</p>
-                <p>You can access the form from here ---> ${lastFeedback?.url}.<p>
-                <p>XOX,<p>
+                <p>Dear student,</p>
+                <p>A feedback form is created regarding our last class of ${lastCourse?.courseCode} (${lastCourse?.courseName}).</p>
+                <p>You can access it from here ---> ${lastFeedback?.url}.<p>
+                <p>Regards,<p>
                 <br><br>
-                <img src="https://content.imageresizer.com/images/memes/Megamind-no-bitches-meme-65939r.jpg" alt="Feedback Form">
+                <img src="https://imgflip.com/s/meme/Shrek-Cat.jpg" alt="cat">
             </body>
             </html>
         """
