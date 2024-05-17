@@ -18,7 +18,7 @@ fun main() {
         .start(wait = false)
 
     // the background process (summary stuff) blocks the thread and server responds to requests
-        startBackgroundProcess()
+    startBackgroundProcess()
 
     Runtime.getRuntime().addShutdownHook(Thread {
         server.stop(20, 20, TimeUnit.SECONDS)

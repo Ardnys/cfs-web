@@ -98,8 +98,7 @@ object MailService {
             .from("student_courses")
             .select(Columns.raw("student_id, course_id")) {
                 filter {
-                    if (lastFeedback?.courseId != null)
-                        eq("course_id", lastFeedback?.courseId!!)
+                    eq("course_id", lastFeedback?.courseId!!)
                 }
             }.decodeList<StudentCourses>()
 
@@ -111,11 +110,11 @@ object MailService {
 
     private suspend fun sendSummaryToTeacher() {
         val subject = "Feedbacks are summarized"
-        if(lastFeedback?.summary == null){
-            logger.info("Feedback summary is not created yet!")
+        if (lastFeedback?.summary == null) {
+            logger.info("Summary for feedback with id={$lastFeedback.id},\"topic={${lastFeedback?.courseTopic}}\",is not created yet!")
             return
-        } else if (lastFeedback?.url == null){
-            logger.info("Feedback summary is already sent!")
+        } else if (lastFeedback?.url == null) {
+            logger.info("Summary for feedback with id={$lastFeedback.id},\"topic={${lastFeedback?.courseTopic}}\",is already sent!")
             return
         }
         val teacher = supabase
@@ -127,7 +126,7 @@ object MailService {
             }.decodeSingle<Teacher>()
         val message = createMessageForTeacher()
         logger.info("sending summary to teacher: ${teacher.mail}")
-        MailSender.sendMail(subject,message ,teacher.mail)
+        MailSender.sendMail(subject, message, teacher.mail)
     }
 
     private suspend fun getTeacherId(): Int {
@@ -150,7 +149,7 @@ object MailService {
                 }
             }.decodeSingle<Course>()
         val message = """
-            Summarized feedbacks for the course ${response.courseCode} (${response.courseName}) scheduled on ${lastFeedback?.courseDate}:
+            Summarized feedbacks for the course ${response.courseCode} (${response.courseName}) held on ${lastFeedback?.courseDate}:
             
             ${lastFeedback?.summary!!}
         """
