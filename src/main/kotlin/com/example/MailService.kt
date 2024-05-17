@@ -43,26 +43,18 @@ object MailService {
         val subject = "No feedback?(,,>﹏<,,)"
         val message = createMessageForStudent()
         val enrolledStudentsMails = getEnrolledStudentsMails()
-        logger.info("sending summary to students")
+        logger.info("sending feedback form for the course ${getLastFeedbacksCourseDetails().courseCode} (${getLastFeedbacksCourseDetails().courseName}), to registered students!")
         for (mail in enrolledStudentsMails) {
             MailSender.sendMail(subject, message, mail, true)
         }
     }
 
     private suspend fun createMessageForStudent(): String {
-        val response = supabase
-            .from("courses")
-            .select(columns = Columns.list("id", "course_name", "course_code", "teacher_id")) {
-                filter {
-                    eq("id", lastFeedback?.courseId!!)
-                }
-            }.decodeSingle<Course>()
-
         val message = """
             <html>
             <body style="font-family: Verdana; color: #777777;">
                 <p>Our precious student♡,</p>
-                <p>Yor feedback regarding our last class of ${response.courseCode} (${response.courseName}) is required for you 🫵🏻 to pass your class.</p>
+                <p>Yor feedback regarding our last class of ${getLastFeedbacksCourseDetails().courseCode} (${getLastFeedbacksCourseDetails().courseName}) is required for you 🫵🏻 to pass your class.</p>
                 <p>You can access the form from here ---> ${lastFeedback?.url}.<p>
                 <p>XOX,<p>
                 <br><br>
@@ -154,5 +146,15 @@ object MailService {
             ${lastFeedback?.summary!!}
         """
         return message
+    }
+    private suspend fun getLastFeedbacksCourseDetails(): Course {
+        val response = supabase
+            .from("courses")
+            .select(columns = Columns.list("id", "course_name", "course_code", "teacher_id")) {
+                filter {
+                    eq("id", lastFeedback?.courseId!!)
+                }
+            }.decodeSingle<Course>()
+        return response
     }
 }
