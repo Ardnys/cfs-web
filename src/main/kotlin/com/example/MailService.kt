@@ -58,7 +58,7 @@ object MailService {
                 <p>Dear student,</p>
                 <p>A feedback form is created regarding our last class of ${lastCourse?.courseCode} (${lastCourse?.courseName}).</p>
                 <p>You can access it from here ---> ${lastFeedback?.url}.<p>
-                <p>Regards,<p>
+                <p>Best Regards,<p>
                 <br><br>
                 <img src="https://imgflip.com/s/meme/Shrek-Cat.jpg" alt="cat">
             </body>
