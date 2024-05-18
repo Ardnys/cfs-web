@@ -1,25 +1,20 @@
 <style>
     body {
-        background-color: #1e1f22;
-        color: #b2b8a1;
+        background-color: rgb(17 20 15);
+        color: rgb(225 228 218);
         font-family: Arial, sans-serif;
     }
 
     *,
     ::before,
     ::after {
-        /* selecting all elements on the page, along with the ::before
-           and ::after pseudo-elements; resetting their margin and
-           padding to zero and forcing all elements to calculate their
-           box-sizing the same way, 'border-box' includes the border-widths,
-           and padding, in the stated width: */
         box-sizing: border-box;
         margin: 0;
         padding: 0;
     }
 
     .cfs-header {
-        color: #57965c;
+        color: rgb(164 211 150);
         margin: 30px;
     }
 
@@ -28,7 +23,7 @@
     }
 
     .not-found-header {
-        color: #c94f4f;
+        color: rgb(105 0 5);
         margin: 5%;
     }
 
@@ -44,7 +39,7 @@
     }
 
     .div-label {
-        color: #d2b058;
+        color: rgb(160 207 210);
         text-align: left;
     }
 
@@ -53,7 +48,7 @@
     }
 
     .div-field {
-        color: #b2b8a1;
+        color: rgb(225 228 218);
         text-align: left;
     }
 
@@ -70,7 +65,7 @@
     .form-label {
         grid-row: 2;
         grid-column: 1;
-        color: #d2b058;
+        color: rgb(160 207 210);
         text-align: left;
     }
 
@@ -94,7 +89,7 @@
     .word_count_label {
         grid-row: 4;
         grid-column: 2;
-        color: #d2b058;
+        color: rgb(160 207 210);
         margin-left: 5%;
         text-align: left;
     }
@@ -102,7 +97,7 @@
     .word_count {
         grid-row: 4;
         grid-column: 3;
-        color: #b2b8a1;
+        color: rgb(192 239 176);
         text-align: left;
     }
 
@@ -119,10 +114,10 @@
     }
 
     .submit_button:hover {
-        background-color: #0056b3;
+        background-color: rgb(164 211 150);
     }
 
     .submit_button:disabled {
-        background-color: #c94f4f;
+        background-color: rgb(105 0 5);
     }
 </style>
