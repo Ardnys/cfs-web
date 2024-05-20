@@ -1,78 +1,70 @@
 package com.example.plugins
 
-import com.example.models.*
-import com.example.utils.supabase
+import com.example.getCourseByCode
+import com.example.getFeedbackByCourseId
+import com.example.models.Course
+import com.example.models.Feedback
+import com.example.models.StudentFeedback
+import com.example.models.UrlActivationRequest
+import com.example.utils.OffsetDateTimeFormatter
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.freemarker.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.util.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.application
+import io.ktor.server.application.call
+import io.ktor.server.application.log
+import io.ktor.server.freemarker.FreeMarkerContent
+import io.ktor.server.request.receive
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import io.ktor.server.util.getOrFail
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-fun Application.configureRouting() {
-    // TODO a different architecture for the routes perhaps
-    routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-        get("/supa") {
-            val students = supabase.from("students").select().decodeList<Student>()
-//            val course = supabase.from("courses").select().decodeList<Course>()[0].toString()
-            call.respondText(students.joinToString())
-//            supabase
-//                .from("courses")
-//                .insert(listOf(
-//                    Course("Intro to Java", "CS100"),
-//                    Course("Calculus 1", "MATH 151"),
-//                    Course("Physics 1", "PHYS 131")
-//                )
-//                )
 
-        }
+fun Application.configureRouting() {
+    routing {
         route("feedback") {
             get("{course_id}") {
-                // TODO handle invalid course ids
                 val code = call.parameters.getOrFail<String>("course_id")
-                val course = supabase.from("courses").select {
-                    filter {
-                        eq("course_code", code)
-                    }
-                }.decodeSingle<Course>()
 
-                val feedback = supabase
-                    .from("feedbacks")
-                    .select(columns = Columns.list("id, url, course_date, course_topic, course_id, feedback_start_date")) {
-                        filter {
-                            if (course.id != null) {
-                                and {
-                                    eq("course_id", course.id)
-                                    gt("feedback_start_date", OffsetDateTime.now().minusHours(48))
-                                }
-                            }
-                        }
-                    }
-                    .decodeSingle<Feedback>()
+                val course = getCourseByCode(code)
+                val feedback = getFeedbackByCourseId(course.id)
 
-                call.respond(FreeMarkerContent("feedback_form.ftl", mapOf("course" to course, "feedback" to feedback)))
+                val courseDateString = OffsetDateTimeFormatter.parse(feedback.courseDate)
+                val millis = feedback.feedbackStartDate?.toInstant()?.toEpochMilli()
 
+                application.log.info("feedback served: $feedback")
+
+                call.respond(
+                    FreeMarkerContent(
+                        "feedback_form.ftl", mapOf(
+                            "startMillis" to millis,
+                            "courseDateString" to courseDateString,
+                            "course" to course,
+                            "feedback" to feedback
+                        )
+                    )
+                )
             }
             post("{course_id}") {
                 val formParameters = call.receiveParameters()
                 val studentFeedbackText = formParameters.getOrFail("student_feedback")
                 val feedbackId = formParameters.getOrFail<Int>("feedback_id").toInt()
-                // TODO check if the feedback is 500 chars or words whatever
 
                 supabase
                     .from("student_feedbacks")
                     .insert(StudentFeedback(studentFeedbackText, feedbackId))
 
+                application.log.info("feedback taken for: $feedbackId")
+
                 call.respond(FreeMarkerContent("thankyou.ftl", model = null))
             }
+            // TODO delete this when mobile is ready
             get("activate") {
                 // creates a new feedback entry in the database
                 // accepts some sort of json
@@ -99,7 +91,7 @@ fun Application.configureRouting() {
                 val feedback = Feedback(
                     courseDate = request.date,
                     courseTopic = request.topic,
-                    courseId = course.id,
+                    courseId = course.id!!,
                     url = "feedback/${course.courseCode}",
                     feedbackStartDate = OffsetDateTime.now(ZoneId.systemDefault())
                 )

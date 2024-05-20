@@ -9,5 +9,8 @@ data class Course(
     @SerialName("course_name")
     val courseName: String,
     @SerialName("course_code")
-    val courseCode: String
+    val courseCode: String,
+    @SerialName("teacher_id")
+    val teacherId: Int? = null
+
 )
