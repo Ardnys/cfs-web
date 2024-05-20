@@ -1,6 +1,10 @@
 package com.example
 
-import com.example.models.*
+import com.example.models.Course
+import com.example.models.Feedback
+import com.example.models.Student
+import com.example.models.StudentCourses
+import com.example.models.Teacher
 import com.example.plugins.supabase
 import com.example.utils.MailSender
 import io.github.jan.supabase.postgrest.from
@@ -9,7 +13,7 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
-import io.ktor.util.logging.*
+import io.ktor.util.logging.KtorSimpleLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn

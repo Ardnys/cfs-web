@@ -2,9 +2,10 @@ package com.example.plugins
 
 import com.example.exceptions.CourseNotFoundException
 import com.example.exceptions.FeedbackNotFoundException
-import io.ktor.server.application.*
-import io.ktor.server.freemarker.*
-import io.ktor.server.response.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.freemarker.FreeMarkerContent
+import io.ktor.server.response.respond
 
 fun Application.configureStatusPages() {
     install(io.ktor.server.plugins.statuspages.StatusPages) {

@@ -8,13 +8,20 @@ import com.example.models.StudentFeedback
 import com.example.models.UrlActivationRequest
 import com.example.utils.OffsetDateTimeFormatter
 import io.github.jan.supabase.postgrest.from
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.freemarker.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.util.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.application
+import io.ktor.server.application.call
+import io.ktor.server.application.log
+import io.ktor.server.freemarker.FreeMarkerContent
+import io.ktor.server.request.receive
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import io.ktor.server.util.getOrFail
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
