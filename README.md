@@ -38,11 +38,6 @@
   <p align="center">
 CFS aims to streamline the crucial feedback loop between teachers and students thus allowing teachers to get feedback from their students more frequently.
     <br />
-    <a href="https://github.com/Ardnys/cfs-web"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/Ardnys/cfs-web">View Demo</a>
-    ·
     <a href="https://github.com/Ardnys/cfs-web/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/Ardnys/cfs-web/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
@@ -69,11 +64,8 @@ CFS aims to streamline the crucial feedback loop between teachers and students t
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -98,6 +90,7 @@ Course Feedback System (CFS) consists of 3 parts:
 * [![Freemarker][Freemarker.org]][Freemarker-url]
 * [![Rust][Rust.org]][Rust-url]
 * [![HuggingFace][Hugging.co]][Hugging-url]
+* [![Python][Python.org]][Python-url]
 * [![ChatGPT][ChatGPT]][ChatGPT-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -107,11 +100,14 @@ Course Feedback System (CFS) consists of 3 parts:
 <!-- GETTING STARTED -->
 ## Getting Started
 The following are needed to run the application.
-- Python
-- JDK 17 
+- JDK 17
+- Python 
 - Supabase URL and KEY (tables too)
 - Gmail Credentials (Theoretically this should be university email API, but we used Gmail as a proof of concept)
 - Optional: A custom [Samurai](https://github.com/Ardnys/samurai-rs). See what makes a "Samurai" for this project.
+
+Default Samurai is implemented by using [gpt4free](https://github.com/xtekky/gpt4free) as a proof on concept, which
+tends to break or produces unexpected results. Using a custom Samurai is strongly encouraged. 
 
 ### Prerequisites
 
@@ -127,6 +123,7 @@ Make sure python and java are in PATH and credentials above are set correctly.
    ```sh
    ./run.sh
    ```
+`run` script does a few things. Make sure you check it before running.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -195,3 +192,5 @@ Drop an issue and we'll respond!
 [Ktor-url]: https://ktor.io/
 [Kotlin.org]: https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=7F52FF&labelColor=black
 [Kotlin-url]: https://kotlinlang.org/
+[Python.org]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
+[Python-url]: https://python.org/
