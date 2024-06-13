@@ -151,7 +151,8 @@ Submitted feedback form displays a warm thank you message.
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+<img src="https://img.shields.io/badge/License-GNU_GPL_v3.0-red.svg"/> <br> 
+This project is licensed under <a href="https://github.com/Ardnys/cfs-web/blob/main/LICENSE">GNU GPLv3.0</a>.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
