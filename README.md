@@ -30,7 +30,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Ardnys/cfs-web">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="https://github.com/Ardnys/cfs-web/blob/main/images/kep.webp" alt="CFS Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Course Feedback System - Web</h3>
@@ -135,8 +135,17 @@ Make sure python and java are in PATH and credentials above are set correctly.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Image of feedback form.
+Feedback form for students. A link to this page is sent to students' email.
 
+  <p align="center">
+    <img src="https://github.com/Ardnys/cfs-web/blob/main/images/feedback_form.png" alt="Feedback form for students">
+  </p>
+
+Submitted feedback form displays a warm thank you message.
+
+  <p align="center">
+    <img src="https://github.com/Ardnys/cfs-web/blob/main/images/feedback_thankyou.png" alt="thank you for your feedback">
+  </p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
